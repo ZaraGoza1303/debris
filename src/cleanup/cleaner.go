@@ -1,12 +1,12 @@
 package cleanup
 
 import (
-	"debris/src/types"
+	"debris/types"
 	"fmt"
 )
 
-func Cleaner(app types.Application) (string, error) {
-	residuals, err := Lookup(app)
+func Cleaner(app types.Application, config types.Config) (string, error) {
+	residuals, err := Lookup(app, config)
 	if err != nil {
 		return "", err
 	}

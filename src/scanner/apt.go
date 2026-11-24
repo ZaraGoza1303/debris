@@ -1,7 +1,7 @@
 package scanner
 
 import (
-	"debris/src/types"
+	"debris/types"
 	"os/exec"
 	"strings"
 )

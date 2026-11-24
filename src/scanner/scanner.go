@@ -1,8 +1,8 @@
 package scanner
 
 import (
-	"debris/src/types"
-	"debris/src/utils"
+	"debris/types"
+	"debris/utils"
 )
 
 func Scan(config types.Config) ([]types.Application, error) {

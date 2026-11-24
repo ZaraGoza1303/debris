@@ -1,7 +1,8 @@
 package cleanup
 
 import (
-	"debris/src/types"
+	"debris/types"
+	"debris/utils"
 	"errors"
 	"os"
 	"path/filepath"
@@ -15,42 +16,14 @@ type Residual struct {
 	IsDir    bool
 }
 
-type searchRoot struct {
-	Path     string
-	Category string
-}
+func Lookup(app types.Application, config types.Config) ([]Residual, error) {
+	var roots []types.SearchRoot
 
-func Lookup(app types.Application) ([]Residual, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	config, err := os.UserConfigDir()
-	if err != nil {
-		return nil, err
-	}
-
-	cache, err := os.UserCacheDir()
-	if err != nil {
-		return nil, err
-	}
-
-	data := os.Getenv("XDG_DATA_HOME")
-	if data == "" {
-		data = filepath.Join(home, ".local", "share")
-	}
-
-	state := os.Getenv("XDG_STATE_HOME")
-	if state == "" {
-		state = filepath.Join(home, ".local", "state")
-	}
-
-	roots := []searchRoot{
-		{config, "Configuration"},
-		{data, "Application Data"},
-		{cache, "Cache"},
-		{state, "Application State"},
+	for _, path := range config.Lookup.Paths {
+		roots = append(roots, types.SearchRoot{
+			Path:     utils.ExpandHome(path.Path),
+			Category: path.Category,
+		})
 	}
 
 	var results []Residual

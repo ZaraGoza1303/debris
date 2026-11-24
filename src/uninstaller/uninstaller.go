@@ -1,7 +1,7 @@
 package uninstaller
 
 import (
-	"debris/src/types"
+	"debris/types"
 	"fmt"
 )
 

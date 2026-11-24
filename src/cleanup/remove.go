@@ -8,6 +8,7 @@ import (
 
 func Remove(selected []Residual) error {
 	for _, item := range selected {
+		// Ambil path absolute di setiap path
 		path, err := filepath.Abs(item.Path)
 		if err != nil {
 			return err

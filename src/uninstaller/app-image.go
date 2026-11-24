@@ -1,8 +1,8 @@
 package uninstaller
 
 import (
-	"debris/src/scanner"
-	"debris/src/types"
+	"debris/scanner"
+	"debris/types"
 	"os"
 	"os/exec"
 )

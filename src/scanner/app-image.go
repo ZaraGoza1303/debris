@@ -1,7 +1,7 @@
 package scanner
 
 import (
-	"debris/src/types"
+	"debris/types"
 	"errors"
 	"io/fs"
 	"os"
@@ -15,7 +15,7 @@ func ScanAppImage(config types.Config) ([]types.Application, error) {
 	var apps []types.Application
 
 	for _, path := range config.Scanner.AppImage.Paths {
-		path = expandHome(path)
+		path = ExpandHome(path)
 
 		err := filepath.WalkDir(path, func(filePath string, data fs.DirEntry, err error) error {
 			if err != nil {
@@ -58,7 +58,7 @@ func FindFilePathAppImage(name string, config types.Config) (string, error) {
 	var appFilePath string
 
 	for _, path := range config.Scanner.AppImage.Paths {
-		path = expandHome(path)
+		path = ExpandHome(path)
 
 		err := filepath.WalkDir(path, func(filePath string, data fs.DirEntry, err error) error {
 			if err != nil {
@@ -95,11 +95,15 @@ func FindFilePathAppImage(name string, config types.Config) (string, error) {
 	return appFilePath, nil
 }
 
-func expandHome(path string) string {
+func ExpandHome(path string) string {
 	homeDir, _ := os.UserHomeDir()
 
 	if strings.HasPrefix(path, "~/") {
 		path = filepath.Join(homeDir, strings.TrimPrefix(path, "~/"))
+	}
+
+	if strings.HasPrefix(path, "$HOME") {
+		path = os.ExpandEnv(path)
 	}
 
 	return path

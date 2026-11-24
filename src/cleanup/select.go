@@ -11,6 +11,7 @@ func Select(items []Residual) ([]Residual, error) {
 		return nil, nil
 	}
 
+	// Deklarasi options dengan type Residual pada library huh
 	var options []huh.Option[Residual]
 
 	for _, item := range items {
@@ -26,18 +27,27 @@ func Select(items []Residual) ([]Residual, error) {
 		)
 	}
 
-	height := len(options) + 1
-	if height > 12 {
-		height = 12
-	}
-
 	var selected []Residual
 
-	err := huh.NewMultiSelect[Residual]().
-		Title("Select residual files to remove").
-		Options(options...).
-		Value(&selected).
-		Height(height).
+	km := huh.NewDefaultKeyMap()
+	km.MultiSelect.Toggle.SetHelp("(space)", "toggle")
+	km.MultiSelect.Up.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Up.Help().Key), km.MultiSelect.Up.Help().Desc)
+	km.MultiSelect.Down.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Down.Help().Key), km.MultiSelect.Down.Help().Desc)
+	km.MultiSelect.Filter.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Filter.Help().Key), km.MultiSelect.Filter.Help().Desc)
+	km.MultiSelect.Submit.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Submit.Help().Key), km.MultiSelect.Submit.Help().Desc)
+	km.MultiSelect.SelectAll.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.SelectAll.Help().Key), km.MultiSelect.SelectAll.Help().Desc)
+
+	err := huh.NewForm(
+		huh.NewGroup(
+			huh.NewMultiSelect[Residual]().
+				Title("Select residual files to remove").
+				Description("Residual files found").
+				Options(options...).
+				Value(&selected).
+				Height(len(options) + 2),
+		),
+	).
+		WithKeyMap(km).
 		Run()
 
 	if err != nil {

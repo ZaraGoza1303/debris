@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"debris/src/types"
+	"debris/types"
 	"fmt"
 	"os"
 	"text/tabwriter"
