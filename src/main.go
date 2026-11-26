@@ -1,9 +1,7 @@
 package main
 
 import (
-	"debris/cleanup"
 	"debris/scanner"
-	"debris/types"
 	"debris/uninstaller"
 	"debris/utils"
 	"fmt"
@@ -17,6 +15,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Scan all apps
 	apps, err := scanner.Scan(config)
 	if err != nil {
 		log.Fatal(err)
@@ -31,41 +30,10 @@ func main() {
 	case "list":
 		utils.PrintApplications(apps)
 
-	case "-h":
+	case "-h", "--help":
 		utils.PrintHelp()
 
 	case "uninstall":
-		var selected *types.Application
-
-		if len(os.Args) < 3 {
-			fmt.Println("Application name not provided yet, use: debris uninstall [app_name]")
-			break
-		}
-
-		appName := os.Args[2]
-		for i := range apps {
-			if apps[i].Name == appName {
-				selected = &apps[i]
-			}
-		}
-
-		if selected == nil {
-			fmt.Println("Application not found\nTry search for an application name using: debris list")
-			break
-		}
-
-		if err := uninstaller.Uninstaller(*selected, config); err != nil {
-			fmt.Println("Uninstall Failed:", err)
-			break
-		}
-		fmt.Printf("\nSuccessfully uninstalled: %s\n\n", selected.Name)
-
-		output, err := cleanup.Cleaner(*selected, config)
-		if err != nil {
-			fmt.Println("Failed to clean residuals files:", err)
-		}
-
-		fmt.Println(output)
+		uninstaller.HandleUninstall(apps, config)
 	}
-
 }

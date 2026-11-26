@@ -36,6 +36,8 @@ func Select(items []Residual) ([]Residual, error) {
 	km.MultiSelect.Filter.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Filter.Help().Key), km.MultiSelect.Filter.Help().Desc)
 	km.MultiSelect.Submit.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Submit.Help().Key), km.MultiSelect.Submit.Help().Desc)
 	km.MultiSelect.SelectAll.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.SelectAll.Help().Key), km.MultiSelect.SelectAll.Help().Desc)
+	km.MultiSelect.SelectNone.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.SelectNone.Help().Key), "unselect all")
+	km.MultiSelect.SetFilter.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.SetFilter.Help().Key), "exit filter")
 
 	err := huh.NewForm(
 		huh.NewGroup(
@@ -57,7 +59,20 @@ func Select(items []Residual) ([]Residual, error) {
 	return selected, nil
 }
 
-func Confirm(count int) (bool, error) {
+func Confirm(name string) (bool, error) {
+	var confirmed bool
+
+	err := huh.NewConfirm().
+		Title(fmt.Sprintf("Are you sure you want to uninstall %s ?", name)).
+		Affirmative("Uninstall").
+		Negative("Cancel").
+		Value(&confirmed).
+		Run()
+
+	return confirmed, err
+}
+
+func ConfirmResiduals(count int) (bool, error) {
 	var confirmed bool
 
 	err := huh.NewConfirm().

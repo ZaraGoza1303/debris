@@ -26,7 +26,7 @@ func Cleaner(app types.Application, config types.Config) (string, error) {
 		return "", nil
 	}
 
-	confirmed, err := Confirm(len(selected))
+	confirmed, err := ConfirmResiduals(len(selected))
 	if err != nil {
 		return "", err
 	}
