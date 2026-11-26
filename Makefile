@@ -52,6 +52,7 @@ generate:
 	@mkdir -p $(CONFIG_DIR)
 	@printf '%s\n' "$$CONFIG_CONTENT" > $(CONFIG_FILE)
 	@echo "Created $(APP) config file in $(CONFIG_FILE)"
+  @echo "help: debris -h"
 
 install: generate build
 	install -Dm755 $(APP) $(BINARY_PATH)

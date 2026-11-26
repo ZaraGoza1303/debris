@@ -30,7 +30,7 @@ func Select(items []Residual) ([]Residual, error) {
 	var selected []Residual
 
 	km := huh.NewDefaultKeyMap()
-	km.MultiSelect.Toggle.SetHelp("(space)", "toggle")
+	km.MultiSelect.Toggle.SetHelp("(space)", "select")
 	km.MultiSelect.Up.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Up.Help().Key), km.MultiSelect.Up.Help().Desc)
 	km.MultiSelect.Down.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Down.Help().Key), km.MultiSelect.Down.Help().Desc)
 	km.MultiSelect.Filter.SetHelp(fmt.Sprintf("(%s)", km.MultiSelect.Filter.Help().Key), km.MultiSelect.Filter.Help().Desc)

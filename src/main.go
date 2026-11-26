@@ -23,7 +23,7 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: debris list/uninstall")
+		fmt.Println("help: debris -h for help")
 		return
 	}
 
@@ -31,11 +31,14 @@ func main() {
 	case "list":
 		utils.PrintApplications(apps)
 
+	case "-h":
+		utils.PrintHelp()
+
 	case "uninstall":
 		var selected *types.Application
 
 		if len(os.Args) < 3 {
-			fmt.Println("Application name not provided yet")
+			fmt.Println("Application name not provided yet, use: debris uninstall [app_name]")
 			break
 		}
 
@@ -55,6 +58,7 @@ func main() {
 			fmt.Println("Uninstall Failed:", err)
 			break
 		}
+		fmt.Printf("\nSuccessfully uninstalled: %s\n\n", selected.Name)
 
 		output, err := cleanup.Cleaner(*selected, config)
 		if err != nil {
