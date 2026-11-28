@@ -4,6 +4,7 @@ import (
 	"debris/types"
 	"debris/utils"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,58 +18,118 @@ type Residual struct {
 }
 
 func Lookup(app types.Application, config types.Config) ([]Residual, error) {
-	var roots []types.SearchRoot
+	roots := lookupRoots(app, config)
 
-	for _, path := range config.Lookup.Paths {
-		roots = append(roots, types.SearchRoot{
-			Path:     utils.ExpandHome(path.Path),
-			Category: path.Category,
-		})
+	targets := []string{app.Name}
+	if app.Source == "flatpak" && app.ID != "" {
+		targets = append(targets, app.ID)
 	}
 
 	var results []Residual
+	seen := make(map[string]bool)
 
 	for _, root := range roots {
-		// Ambil data isi direktori
-		entries, err := os.ReadDir(root.Path)
-		if errors.Is(err, os.ErrNotExist) {
-			continue
-		}
+		err := filepath.WalkDir(root.Path, func(path string, entry fs.DirEntry, err error) error {
+			if err != nil {
+				if errors.Is(err, fs.ErrNotExist) || errors.Is(err, fs.ErrPermission) {
+					return nil
+				}
+				return err
+			}
 
-		if err != nil {
-			return nil, err
-		}
+			// Root itu sendiri tidak perlu dimasukkan.
+			if path == root.Path {
+				return nil
+			}
 
-		for _, entry := range entries {
-			// Cek apakah symlink atau bukan
+			// Symlink tidak diikuti.
 			if entry.Type()&os.ModeSymlink != 0 {
-				continue
+				return nil
 			}
 
-			// Cek apakah entry yang masuk itu sama dengan target app yang dicari
-			if !matches(entry.Name(), app.Name) {
-				continue
+			if !matchesAny(entry.Name(), targets) {
+				return nil
 			}
+
+			if seen[path] {
+				return nil
+			}
+			seen[path] = true
 
 			results = append(results, Residual{
-				Path:     filepath.Join(root.Path, entry.Name()),
+				Path:     path,
 				Category: root.Category,
 				IsDir:    entry.IsDir(),
 			})
+
+			// Kalau direktori cocok, isinya tidak perlu didaftarkan satu per satu.
+			if entry.IsDir() {
+				return filepath.SkipDir
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	return results, nil
 }
 
+func lookupRoots(app types.Application, config types.Config) []types.SearchRoot {
+	paths := make([]types.SearchRoot, 0, len(config.Lookup.Paths))
+
+	for _, path := range config.Lookup.Paths {
+		paths = append(paths, path)
+	}
+
+	switch app.Source {
+	case "flatpak":
+		paths = append(paths, config.Lookup.Flatpak.Paths...)
+
+	case "AppImage":
+		paths = append(paths, config.Lookup.AppImage.Paths...)
+	}
+
+	seen := make(map[string]bool, len(paths))
+	roots := make([]types.SearchRoot, 0, len(paths))
+
+	for _, path := range paths {
+		expanded := utils.ExpandHome(path.Path)
+		if expanded == "" || seen[expanded] {
+			continue
+		}
+
+		seen[expanded] = true
+		roots = append(roots, types.SearchRoot{
+			Path:     expanded,
+			Category: path.Category,
+		})
+	}
+
+	return roots
+}
+
 func normalize(name string) string {
 	return strings.Map(func(r rune) rune {
-		// Cek apakah uncicode termasuk letter dan digit, kalau iya maka buat lowercase
+		// Cek apakah unicode termasuk letter dan digit, kalau iya maka buat lowercase
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			return unicode.ToLower(r)
 		}
 		return -1
 	}, name)
+}
+
+func matchesAny(entry string, targets []string) bool {
+	for _, target := range targets {
+		if matches(entry, target) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func matches(entry string, targetApp string) bool {

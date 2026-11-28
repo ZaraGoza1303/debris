@@ -7,7 +7,12 @@ import (
 )
 
 func UninstallFlatpak(app types.Application) error {
-	cmd := exec.Command("flatpak", "uninstall", "--delete-data", app.Name)
+	target := app.Name
+	if app.ID != "" {
+		target = app.ID
+	}
+
+	cmd := exec.Command("flatpak", "uninstall", "--delete-data", target)
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
