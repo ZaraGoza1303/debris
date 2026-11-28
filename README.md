@@ -1,17 +1,12 @@
 # Debris
 
-Debris is a Linux cleanup tool written in Go. It scans applications installed
-through your distribution's package manager and other supported sources,
-uninstalls them through their native source, and helps you find and remove
-leftover files.
+Debris is a Linux cleanup tool written in Go. It scans applications installed through your distribution's package manager and other supported sources, uninstalls them through their native source, and helps you find and remove leftover files.
 
-Residual files are never deleted automatically. Debris shows what it found and
-lets you choose which items to remove.
+Residual files are never deleted automatically. Debris shows what it found and lets you choose which items to remove.
 
 ## Features
 
-- Scan applications installed through your distribution's package manager and
-  other supported sources.
+- Scan applications installed through your distribution's package manager and other supported sources.
 - Uninstall each application through its native source.
 - Find residual files in configurable paths, then choose what to remove.
 - Interactive terminal UI for selecting applications and residual files.
@@ -21,9 +16,6 @@ lets you choose which items to remove.
 - Linux. The distribution is detected from `/etc/os-release`.
 - Go 1.27.2 or newer.
 - `make` (optional, but used by the install commands below).
-- `sudo` for system package uninstalls.
-- The native tools for the sources you use, such as `dpkg-query` and `apt`,
-  `pacman`, `dnf`, or `flatpak`.
 
 ## Installation
 
@@ -35,8 +27,7 @@ cd debris
 make
 ```
 
-`make` generates `~/.config/debris/config.toml`, builds the binary, and installs
-it to `~/.local/bin/debris`.
+`make` generates `~/.config/debris/config.toml`, builds the binary, and installs it to `~/.local/bin/debris`.
 
 Make sure `~/.local/bin` is in your `PATH`:
 
@@ -69,14 +60,13 @@ debris uninstall  # uninstall an application interactively
 debris -h         # show help
 ```
 
-There is no separate `scan` command; `list` performs the scan. It prints every
-application Debris can detect, along with its source and version:
+There is no separate `scan` command; `list` performs the scan. It prints every application Debris can detect, along with its source and version:
 
 ```text
 NAME                 SOURCE    VERSION
 firefox              apt       128.0
-Calculator           flatpak   46.0
-Obsidian             AppImage  1.6.7
+Calculator            flatpak   46.0
+Obsidian              AppImage  1.6.7
 ```
 
 `uninstall` opens an interactive flow:
@@ -98,8 +88,7 @@ Debris reads its configuration from:
 ~/.config/debris/config.toml
 ```
 
-The file is required. If it is missing, Debris exits with an error.
-`make generate` creates a default configuration.
+The file is required. If it is missing, Debris exits with an error. `make generate` creates a default configuration.
 
 Example configuration:
 
@@ -107,13 +96,13 @@ Example configuration:
 [scanner.appimage]
 enabled = true
 paths = [
-  "~/Applications",
-  "~/AppImages",
-  "~/Downloads",
-  "~/.local/bin",
-  "/opt",
-  "/usr/local/bin",
-  "/usr/local/share"
+    "~/Applications",
+    "~/AppImages",
+    "~/Downloads",
+    "~/.local/bin",
+    "/opt",
+    "/usr/local/bin",
+    "/usr/local/share"
 ]
 
 [scanner.flatpak]
@@ -121,21 +110,21 @@ enabled = true
 
 [lookup]
 paths = [
-  { path = "~/.config", category = "Configuration" },
-  { path = "~/.local/share", category = "Application Data" },
-  { path = "~/.cache", category = "Cache" },
-  { path = "~/.local/state", category = "Application State" }
+    { path = "~/.config", category = "Configuration" },
+    { path = "~/.local/share", category = "Application Data" },
+    { path = "~/.cache", category = "Cache" },
+    { path = "~/.local/state", category = "Application State" }
 ]
 
 [lookup.flatpak]
 paths = [
-  { path = "~/.var/app", category = "Flatpak Data" }
+    { path = "~/.var/app", category = "Flatpak Data" }
 ]
 
 [lookup.appimage]
 paths = [
-  { path = "~/.local/share/applications", category = "Desktop Integration" },
-  { path = "~/.local/share/icons", category = "Icons" }
+    { path = "~/.local/share/applications", category = "Desktop Integration" },
+    { path = "~/.local/share/icons", category = "Icons" }
 ]
 ```
 
@@ -152,44 +141,22 @@ paths = [
 | `lookup.flatpak.paths` | array of tables | Additional search roots for Flatpak applications. |
 | `lookup.appimage.paths` | array of tables | Additional search roots for AppImage applications. |
 
-The same `path` and `category` fields apply to `lookup.flatpak.paths` and
-`lookup.appimage.paths`.
+The same `path` and `category` fields apply to `lookup.flatpak.paths` and `lookup.appimage.paths`.
 
 Notes:
 
 - `~/` and `$HOME` are expanded in scanner and lookup paths.
 - `make generate` writes absolute paths using `$HOME` at generation time.
-- APT, Pacman, and DNF scanning is automatic based on the detected
-  distribution. There is no enable/disable option for these sources.
+- APT, Pacman, and DNF scanning is automatic based on the detected distribution. There is no enable/disable option for these sources.
 - `lookup.flatpak` paths are used only when cleaning a Flatpak application.
 - `lookup.appimage` paths are used only when cleaning an AppImage application.
 - Both are added to `lookup.paths`, not used as replacements.
 
-## How cleanup works
+## Residual cleanup
 
-After a successful uninstall, Debris builds a list of search roots from the
-global `lookup.paths` plus the paths for the application's source:
+After uninstalling an application, Debris searches the configured lookup paths for possible leftover files. Matching entries are shown for review, and you must select and confirm what to remove.
 
-- Flatpak applications also use `lookup.flatpak.paths`.
-- AppImage applications also use `lookup.appimage.paths`.
-- Package-manager applications use only `lookup.paths`.
-
-Debris walks each root recursively, including subdirectories. This lets it find
-leftovers such as icons stored under paths like
-`~/.local/share/icons/hicolor/48x48/apps/`.
-
-Entry names are compared with the application name. Names are normalized to
-lowercase letters and digits, and file extensions are ignored. Flatpak
-applications are also matched against their application ID, because Flatpak
-data directories are named after the ID rather than the display name.
-
-Symlinks are skipped. Matching entries are shown in a multi-select list with
-their category and full path. Nothing is removed until you select items and
-confirm the removal.
-
-Residual detection is heuristic. It does not read package ownership data. A
-match may be incomplete, and an entry with the same name may not belong to the
-application you uninstalled. Review the list before confirming.
+Residual detection is heuristic and based on names. It may miss leftovers or find unrelated files with similar names. Review the paths before confirming.
 
 ## Supported sources
 
@@ -205,29 +172,12 @@ Other package managers and application sources are not supported yet.
 
 ## Limitations
 
-- Automatic distribution detection uses the `ID` field from `/etc/os-release`.
-  Distributions with a different ID, including some derivatives, may not get
-  system package scanning.
-- Lookup walks every configured path recursively, so large directories can take
-  longer to scan.
-- Residual matching is based on names, not package ownership. It can miss
-  leftovers stored under a different name and can match unrelated files with
-  the same name.
-- AppImage uninstall removes only the AppImage file. Desktop entries and icons
-  are removed only if they appear in the residual search results.
+- Automatic distribution detection uses the `ID` field from `/etc/os-release`. Distributions with a different ID, including some derivatives, may not get system package scanning.
+- Lookup walks every configured path recursively, so large directories can take longer to scan.
+- Residual matching is based on names, not package ownership. It can miss leftovers stored under a different name and can match unrelated files with the same name.
+- AppImage uninstall removes only the AppImage file. Desktop entries and icons are removed only if they appear in the residual search results.
 - There is no undo. Deleted files cannot be recovered by Debris.
-- The application scan runs before the command is handled, so even
-  `debris -h` waits for the scan to finish.
-
-## Design notes
-
-- Residual files are never deleted automatically. You select the items and
-  confirm before removal.
-- Residual lookup is source-agnostic: it matches names under configured paths
-  instead of querying a package ownership database.
-- Symlinks are skipped during both lookup and removal.
-- Source-specific lookup paths supplement the global paths, so each source can
-  add its own data locations without duplicating the global configuration.
+- The application scan runs before the command is handled, so even `debris -h` waits for the scan to finish.
 
 ## Contributing
 
@@ -239,11 +189,9 @@ Contributions are welcome.
 4. Build with `make build` or `cd src && go build -o ../debris .`.
 5. Open a pull request describing the change.
 
-There is no automated test suite or CI yet, so please test your changes
-manually and include the distribution and source you tested with.
+There is no automated test suite or CI yet, so please test your changes manually and include the distribution and source you tested with.
 
-For bug reports, include your distribution, the application source, the command
-you ran, and the relevant output.
+For bug reports, include your distribution, the application source, the command you ran, and the relevant output.
 
 ## Credits
 
@@ -251,9 +199,6 @@ Created by [ZaraGoza1303](https://github.com/ZaraGoza1303).
 
 Built with:
 
-- [charm.land/huh](https://github.com/charmbracelet/huh) for the interactive
-  terminal UI.
-- [pelletier/go-toml](https://github.com/pelletier/go-toml) for TOML
-  configuration parsing.
-- [probonopd/go-appimage](https://github.com/probonopd/go-appimage) for
-  AppImage detection and metadata.
+- [charm.land/huh](https://github.com/charmbracelet/huh) for the interactive terminal UI.
+- [pelletier/go-toml](https://github.com/pelletier/go-toml) for TOML configuration parsing.
+- [probonopd/go-appimage](https://github.com/probonopd/go-appimage) for AppImage detection and metadata.
